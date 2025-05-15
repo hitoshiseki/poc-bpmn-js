@@ -29,6 +29,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { BpmnProcess } from "@/lib/types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const processFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -42,6 +43,7 @@ const ProcessEditor = () => {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const isEditMode = Boolean(id);
+  const isMobile = useIsMobile();
   
   const [bpmnXml, setBpmnXml] = useState<string>("");
   
@@ -112,15 +114,15 @@ const ProcessEditor = () => {
     
     // Ensure we're passing all required fields with proper types
     const data = {
-      name: values.name, // Explicitly use the name from the form values
-      description: values.description, // Explicitly use the description from the form values
+      name: values.name, 
+      description: values.description,
       xml: bpmnXml,
     };
     
     if (isEditMode && id) {
       updateProcessMutation.mutate({ id, data });
     } else {
-      createProcessMutation.mutate(data);
+      createProcessMutation.mutate(data as Omit<BpmnProcess, "id" | "createdAt" | "updatedAt">);
     }
   };
   
@@ -135,8 +137,8 @@ const ProcessEditor = () => {
         </h2>
       </div>
       
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-1">
+      <div className="grid gap-6 xl:grid-cols-3">
+        <Card className={`${isMobile || !isMobile && window.innerWidth < 1280 ? 'w-full' : ''} xl:col-span-1`}>
           <CardHeader>
             <CardTitle>Process Details</CardTitle>
             <CardDescription>
@@ -191,7 +193,7 @@ const ProcessEditor = () => {
           </CardContent>
         </Card>
         
-        <Card className="h-[calc(100vh-250px)] lg:col-span-2">
+        <Card className={`h-[calc(100vh-250px)] ${isMobile || !isMobile && window.innerWidth < 1280 ? 'w-full' : ''} xl:col-span-2`}>
           <CardHeader>
             <CardTitle>Process Diagram</CardTitle>
             <CardDescription>

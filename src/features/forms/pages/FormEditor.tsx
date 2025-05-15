@@ -28,6 +28,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { DynamicForm } from "@/lib/types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -63,6 +64,7 @@ const FormEditor = () => {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const isEditMode = Boolean(id);
+  const isMobile = useIsMobile();
   
   const [formSchema, setFormSchema] = useState<any>(DEFAULT_FORM_SCHEMA);
   
@@ -160,7 +162,7 @@ const FormEditor = () => {
     if (isEditMode && id) {
       updateFormMutation.mutate({ id, data });
     } else {
-      createFormMutation.mutate(data);
+      createFormMutation.mutate(data as Omit<DynamicForm, "id" | "createdAt" | "updatedAt">);
     }
   };
   
@@ -175,8 +177,8 @@ const FormEditor = () => {
         </h2>
       </div>
       
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-1">
+      <div className="grid gap-6 xl:grid-cols-3">
+        <Card className={`${isMobile || !isMobile && window.innerWidth < 1280 ? 'w-full' : ''} xl:col-span-1`}>
           <CardHeader>
             <CardTitle>Form Details</CardTitle>
             <CardDescription>
@@ -231,7 +233,7 @@ const FormEditor = () => {
           </CardContent>
         </Card>
         
-        <Card className="h-[calc(100vh-250px)] lg:col-span-2">
+        <Card className={`h-[calc(100vh-250px)] ${isMobile || !isMobile && window.innerWidth < 1280 ? 'w-full' : ''} xl:col-span-2`}>
           <CardHeader>
             <CardTitle>Form Builder</CardTitle>
             <CardDescription>
