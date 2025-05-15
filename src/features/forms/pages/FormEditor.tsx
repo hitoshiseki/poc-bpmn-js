@@ -36,13 +36,35 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+// Default form schema with proper structure
+const DEFAULT_FORM_SCHEMA = {
+  type: "default",
+  components: [
+    {
+      type: "text",
+      text: "# My New Form\n\nThis is a new dynamic form."
+    },
+    {
+      key: "textfield",
+      label: "Text Field",
+      type: "textfield"
+    },
+    {
+      key: "checkbox",
+      label: "Checkbox",
+      type: "checkbox"
+    }
+  ],
+  schemaVersion: 5
+};
+
 const FormEditor = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const isEditMode = Boolean(id);
   
-  const [formSchema, setFormSchema] = useState<any>(null);
+  const [formSchema, setFormSchema] = useState<any>(DEFAULT_FORM_SCHEMA);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -66,7 +88,27 @@ const FormEditor = () => {
         name: existingForm.name,
         description: existingForm.description,
       });
-      setFormSchema(existingForm.schema);
+      
+      // Ensure the schema has the proper structure
+      if (existingForm.schema) {
+        const validSchema = { ...existingForm.schema };
+        
+        if (!validSchema.type) {
+          validSchema.type = "default";
+        }
+        
+        if (!validSchema.components || !Array.isArray(validSchema.components)) {
+          validSchema.components = DEFAULT_FORM_SCHEMA.components;
+        }
+        
+        if (!validSchema.schemaVersion) {
+          validSchema.schemaVersion = 5;
+        }
+        
+        setFormSchema(validSchema);
+      } else {
+        setFormSchema(DEFAULT_FORM_SCHEMA);
+      }
     }
   }, [existingForm, form]);
   
@@ -109,10 +151,9 @@ const FormEditor = () => {
       return;
     }
     
-    // Ensure we're passing all required fields with proper types
     const data = {
-      name: values.name, // Explicitly use the name from the form values
-      description: values.description, // Explicitly use the description from the form values
+      name: values.name,
+      description: values.description,
       schema: formSchema,
     };
     
