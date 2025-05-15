@@ -35,8 +35,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ProcessFormIntegration } from "@/lib/types";
 
 const integrationSchema = z.object({
-  processId: z.string().min(1, "Process is required"),
-  formId: z.string().min(1, "Form is required"),
+  processId: z.string().min(1, "Processo é obrigatório"),
+  formId: z.string().min(1, "Formulário é obrigatório"),
 });
 
 type IntegrationFormValues = z.infer<typeof integrationSchema>;
@@ -47,10 +47,10 @@ const IntegrationEditor = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const preselectedProcessId = queryParams.get("processId");
-  
+
   const queryClient = useQueryClient();
   const isEditMode = Boolean(id);
-  
+
   // Form setup with validation
   const form = useForm<IntegrationFormValues>({
     resolver: zodResolver(integrationSchema),
@@ -59,24 +59,24 @@ const IntegrationEditor = () => {
       formId: "",
     },
   });
-  
+
   // Fetch data
   const { data: integration, isLoading: isLoadingIntegration } = useQuery({
     queryKey: ["integration", id],
     queryFn: () => integrationService.getIntegrationById(id!),
     enabled: isEditMode,
   });
-  
+
   const { data: processes = [], isLoading: isLoadingProcesses } = useQuery({
     queryKey: ["processes"],
     queryFn: () => processService.getAllProcesses(),
   });
-  
+
   const { data: forms = [], isLoading: isLoadingForms } = useQuery({
     queryKey: ["forms"],
     queryFn: () => formService.getAllForms(),
   });
-  
+
   // Set form values from integration if in edit mode
   useEffect(() => {
     if (integration) {
@@ -86,51 +86,51 @@ const IntegrationEditor = () => {
       });
     }
   }, [integration, form]);
-  
+
   // Mutations for creating/updating integration
   const createIntegrationMutation = useMutation({
     mutationFn: (data: Omit<ProcessFormIntegration, "id" | "createdAt">) =>
       integrationService.createIntegration(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["integrations"] });
-      toast.success("Integration created successfully");
+      toast.success("Integração criada com sucesso");
       navigate("/integration");
     },
     onError: () => {
-      toast.error("Failed to create integration");
+      toast.error("Falha ao criar integração");
     },
   });
-  
+
   const updateIntegrationMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Omit<ProcessFormIntegration, "id" | "createdAt"> }) =>
       integrationService.updateIntegration(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["integrations"] });
       queryClient.invalidateQueries({ queryKey: ["integration", id] });
-      toast.success("Integration updated successfully");
+      toast.success("Integração atualizada com sucesso");
       navigate("/integration");
     },
     onError: () => {
-      toast.error("Failed to update integration");
+      toast.error("Falha ao atualizar integração");
     },
   });
-  
+
   const onSubmit = (values: IntegrationFormValues) => {
     // Convert the values to the correct type
     const integrationData: Omit<ProcessFormIntegration, "id" | "createdAt"> = {
       processId: values.processId,
       formId: values.formId,
     };
-    
+
     if (isEditMode && id) {
       updateIntegrationMutation.mutate({ id, data: integrationData });
     } else {
       createIntegrationMutation.mutate(integrationData);
     }
   };
-  
+
   const isLoading = isLoadingIntegration || isLoadingProcesses || isLoadingForms;
-  
+
   return (
     <div className="space-y-6 py-6">
       <div className="flex items-center">
@@ -138,18 +138,18 @@ const IntegrationEditor = () => {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h2 className="ml-4 text-3xl font-bold">
-          {isEditMode ? "Edit Integration" : "New Integration"}
+          {isEditMode ? "Editar Integração" : "Nova Integração"}
         </h2>
       </div>
-      
+
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
           <div className="flex items-center">
             <Link2 className="mr-2 h-5 w-5" />
-            <CardTitle>Process-Form Integration</CardTitle>
+            <CardTitle>Integração Processo-Formulário</CardTitle>
           </div>
           <CardDescription>
-            Link a BPMN process with a dynamic form
+            Vincule um processo BPMN com um formulário dinâmico
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -165,7 +165,7 @@ const IntegrationEditor = () => {
                   name="processId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>BPMN Process</FormLabel>
+                      <FormLabel>Processo BPMN</FormLabel>
                       <FormControl>
                         <Select
                           value={field.value}
@@ -173,7 +173,7 @@ const IntegrationEditor = () => {
                           disabled={Boolean(preselectedProcessId) || processes.length === 0}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a process" />
+                            <SelectValue placeholder="Selecione um processo" />
                           </SelectTrigger>
                           <SelectContent>
                             {processes.map((process) => (
@@ -186,20 +186,20 @@ const IntegrationEditor = () => {
                       </FormControl>
                       {processes.length === 0 && (
                         <div className="text-sm text-destructive">
-                          No processes available. Please create a process first.
+                          Nenhum processo disponível. Por favor, crie um processo primeiro.
                         </div>
                       )}
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="formId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Dynamic Form</FormLabel>
+                      <FormLabel>Formulário Dinâmico</FormLabel>
                       <FormControl>
                         <Select
                           value={field.value}
@@ -207,7 +207,7 @@ const IntegrationEditor = () => {
                           disabled={forms.length === 0}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a form" />
+                            <SelectValue placeholder="Selecione um formulário" />
                           </SelectTrigger>
                           <SelectContent>
                             {forms.map((form) => (
@@ -220,26 +220,26 @@ const IntegrationEditor = () => {
                       </FormControl>
                       {forms.length === 0 && (
                         <div className="text-sm text-destructive">
-                          No forms available. Please create a form first.
+                          Nenhum formulário disponível. Por favor, crie um formulário primeiro.
                         </div>
                       )}
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
+
                 <div className="flex justify-end">
-                  <Button 
+                  <Button
                     type="submit"
                     disabled={
-                      processes.length === 0 || 
-                      forms.length === 0 || 
-                      createIntegrationMutation.isPending || 
+                      processes.length === 0 ||
+                      forms.length === 0 ||
+                      createIntegrationMutation.isPending ||
                       updateIntegrationMutation.isPending
                     }
                   >
                     <Save className="mr-2 h-4 w-4" />
-                    {isEditMode ? "Update Integration" : "Save Integration"}
+                    {isEditMode ? "Atualizar Integração" : "Salvar Integração"}
                   </Button>
                 </div>
               </form>

@@ -45,7 +45,7 @@ export const processService = {
         const index = processes.findIndex((p: BpmnProcess) => p.id === id);
 
         if (index === -1) {
-          reject(new Error("Processo não encontrado"));
+          reject(new Error("Process not found"));
           return;
         }
 
@@ -69,7 +69,7 @@ export const processService = {
         const index = processes.findIndex((p: BpmnProcess) => p.id === id);
 
         if (index === -1) {
-          reject(new Error("Processo não encontrado"));
+          reject(new Error("Process not found"));
           return;
         }
 

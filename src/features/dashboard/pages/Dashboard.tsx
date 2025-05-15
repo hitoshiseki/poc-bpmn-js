@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Workflow, FileText, Link as LinkIcon } from "lucide-react";
@@ -28,15 +27,15 @@ const Dashboard = () => {
     <div className="space-y-6 py-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-3xl font-bold">Dashboard</h2>
-          <p className="text-muted-foreground">Welcome to the BPMN & Dynamic Forms POC</p>
+          <h2 className="text-3xl font-bold">Painel</h2>
+          <p className="text-muted-foreground">Bem-vindo ao POC de BPMN e Formulários Dinâmicos</p>
         </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-2xl font-bold">BPMN Processes</CardTitle>
+            <CardTitle className="text-2xl font-bold">Processos BPMN</CardTitle>
             <Workflow className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -48,11 +47,11 @@ const Dashboard = () => {
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Total processes modeled
+              Total de processos modelados
             </p>
             <div className="mt-4">
               <Button asChild variant="outline" className="w-full">
-                <Link to="/processes">View All Processes</Link>
+                <Link to="/processes">Ver Todos os Processos</Link>
               </Button>
             </div>
           </CardContent>
@@ -60,7 +59,7 @@ const Dashboard = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-2xl font-bold">Dynamic Forms</CardTitle>
+            <CardTitle className="text-2xl font-bold">Formulários Dinâmicos</CardTitle>
             <FileText className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -72,11 +71,11 @@ const Dashboard = () => {
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Total forms created
+              Total de formulários criados
             </p>
             <div className="mt-4">
               <Button asChild variant="outline" className="w-full">
-                <Link to="/forms">View All Forms</Link>
+                <Link to="/forms">Ver Todos os Formulários</Link>
               </Button>
             </div>
           </CardContent>
@@ -84,7 +83,7 @@ const Dashboard = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-2xl font-bold">Integrations</CardTitle>
+            <CardTitle className="text-2xl font-bold">Integrações</CardTitle>
             <LinkIcon className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -96,11 +95,11 @@ const Dashboard = () => {
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Process-form links
+              Conexões processo-formulário
             </p>
             <div className="mt-4">
               <Button asChild variant="outline" className="w-full">
-                <Link to="/integration">View All Integrations</Link>
+                <Link to="/integration">Ver Todas as Integrações</Link>
               </Button>
             </div>
           </CardContent>
@@ -110,39 +109,39 @@ const Dashboard = () => {
       <div className="mt-10">
         <Card>
           <CardHeader>
-            <CardTitle>Getting Started</CardTitle>
+            <CardTitle>Começando</CardTitle>
             <CardDescription>
-              Welcome to the BPMN & Dynamic Forms proof of concept.
+              Bem-vindo ao prova de conceito de BPMN e Formulários Dinâmicos.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <h3 className="font-medium">1. Create BPMN Process</h3>
+              <h3 className="font-medium">1. Criar Processo BPMN</h3>
               <p className="text-sm text-muted-foreground">
-                First, create a BPMN process using the integrated BPMN.js editor.
+                Primeiro, crie um processo BPMN usando o editor BPMN.js integrado.
               </p>
               <Button asChild size="sm">
-                <Link to="/processes/new">Create Process</Link>
+                <Link to="/processes/new">Criar Processo</Link>
               </Button>
             </div>
 
             <div className="space-y-2">
-              <h3 className="font-medium">2. Create Dynamic Form</h3>
+              <h3 className="font-medium">2. Criar Formulário Dinâmico</h3>
               <p className="text-sm text-muted-foreground">
-                Design interactive forms using the form-js editor.
+                Desenhe formulários interativos usando o editor form-js.
               </p>
               <Button asChild size="sm">
-                <Link to="/forms/new">Create Form</Link>
+                <Link to="/forms/new">Criar Formulário</Link>
               </Button>
             </div>
 
             <div className="space-y-2">
-              <h3 className="font-medium">3. Link Process and Form</h3>
+              <h3 className="font-medium">3. Vincular Processo e Formulário</h3>
               <p className="text-sm text-muted-foreground">
-                Connect your BPMN process with the appropriate form.
+                Conecte seu processo BPMN com o formulário apropriado.
               </p>
               <Button asChild size="sm">
-                <Link to="/integration">Create Integration</Link>
+                <Link to="/integration">Criar Integração</Link>
               </Button>
             </div>
           </CardContent>

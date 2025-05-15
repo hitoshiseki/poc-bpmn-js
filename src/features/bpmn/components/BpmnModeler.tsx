@@ -113,7 +113,7 @@ export const BpmnModeler: React.FC<BpmnModelerProps> = ({
         }
       })
       .catch((err: Error) => {
-        console.error("Error importing BPMN XML", err);
+        console.error("Erro ao importar BPMN XML", err);
         setError("Falha ao carregar o diagrama BPMN. Utilizando diagrama padrão.");
 
         // Fallback to default diagram on error
@@ -149,7 +149,7 @@ export const BpmnModeler: React.FC<BpmnModelerProps> = ({
           onChange(xml);
         })
         .catch((err: Error) => {
-          console.error("Error saving BPMN XML", err);
+          console.error("Erro ao salvar BPMN XML", err);
         });
     };
 

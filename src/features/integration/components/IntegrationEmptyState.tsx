@@ -10,14 +10,14 @@ export const IntegrationEmptyState = () => {
         <div className="mb-4 rounded-full bg-primary/10 p-3">
           <Link2 className="h-10 w-10 text-primary" />
         </div>
-        <h2 className="text-2xl font-bold">No integrations found</h2>
+        <h2 className="text-2xl font-bold">Nenhuma integração cadastrada</h2>
         <p className="mt-2 text-muted-foreground">
-          Create your first integration by linking a BPMN process with a dynamic form.
+          Crie sua primeira integração ao conectar o processo BPMN com um formulário dinâmico.
         </p>
         <Button asChild className="mt-6">
           <Link to="/integration/new">
             <PlusCircle className="mr-2 h-4 w-4" />
-            Create Integration
+            Criar Integração
           </Link>
         </Button>
       </div>
