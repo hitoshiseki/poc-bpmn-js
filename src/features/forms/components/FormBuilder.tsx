@@ -56,7 +56,7 @@ export function FormBuilder({ initialSchema = DEFAULT_FORM_SCHEMA, onChange }: F
     return () => {
       formEditor.destroy();
     };
-  }, []);
+  }, [initialSchema, onChange]);
 
   return (
     <div className="h-full">

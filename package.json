@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@bpmn-io/form-js-editor": "^1.15.2",
     "@bpmn-io/form-js-viewer": "^1.8.0",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
