@@ -9,13 +9,13 @@ const AppLayout = () => {
   const { sidebarOpen } = useAppContext();
 
   return (
-    <div className="flex h-screen w-full overflow-hidden">
+    <div className="flex h-screen w-full overflow-hidden bg-background">
       <Sidebar />
       
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className={`flex flex-1 flex-col overflow-hidden transition-all duration-300 ${sidebarOpen ? "md:ml-64" : "md:ml-16"}`}>
         <Header />
         
-        <main className={`flex-1 overflow-auto p-4 transition-all duration-300 ${sidebarOpen ? "md:ml-64" : ""}`}>
+        <main className="flex-1 overflow-auto p-4">
           <div className="container mx-auto h-full">
             <AppRoutes />
           </div>

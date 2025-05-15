@@ -46,8 +46,9 @@ const Sidebar = () => {
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-20 flex w-64 flex-col bg-sidebar border-r border-sidebar-border transition-transform duration-300",
-        sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0 md:w-16"
+        "fixed inset-y-0 left-0 z-40 flex flex-col bg-sidebar border-r border-sidebar-border transition-transform duration-300",
+        sidebarOpen ? "w-64" : "w-16",
+        sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
       )}
     >
       <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-4">

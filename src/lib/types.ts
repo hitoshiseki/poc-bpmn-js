@@ -1,4 +1,4 @@
-
+// Add required fields to the interface declarations to fix the TS errors
 export interface BpmnProcess {
   id: string;
   name: string;
