@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -33,6 +32,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ProcessFormIntegration } from "@/lib/types";
 
 const integrationSchema = z.object({
   processId: z.string().min(1, "Process is required"),
@@ -89,7 +89,7 @@ const IntegrationEditor = () => {
   
   // Mutations for creating/updating integration
   const createIntegrationMutation = useMutation({
-    mutationFn: (data: Omit<IntegrationFormValues, "id" | "createdAt">) =>
+    mutationFn: (data: Omit<ProcessFormIntegration, "id" | "createdAt">) =>
       integrationService.createIntegration(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["integrations"] });
@@ -102,8 +102,8 @@ const IntegrationEditor = () => {
   });
   
   const updateIntegrationMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Omit<IntegrationFormValues, "id" | "createdAt"> }) =>
-      integrationService.createIntegration(data), // We're reusing the create method as it handles updates too
+    mutationFn: ({ id, data }: { id: string; data: Omit<ProcessFormIntegration, "id" | "createdAt"> }) =>
+      integrationService.updateIntegration(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["integrations"] });
       queryClient.invalidateQueries({ queryKey: ["integration", id] });
@@ -116,10 +116,16 @@ const IntegrationEditor = () => {
   });
   
   const onSubmit = (values: IntegrationFormValues) => {
+    // Convert the values to the correct type
+    const integrationData: Omit<ProcessFormIntegration, "id" | "createdAt"> = {
+      processId: values.processId,
+      formId: values.formId,
+    };
+    
     if (isEditMode && id) {
-      updateIntegrationMutation.mutate({ id, data: values });
+      updateIntegrationMutation.mutate({ id, data: integrationData });
     } else {
-      createIntegrationMutation.mutate(values);
+      createIntegrationMutation.mutate(integrationData);
     }
   };
   

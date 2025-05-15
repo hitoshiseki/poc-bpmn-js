@@ -21,47 +21,42 @@ export const integrationService = {
     });
   },
   
-  getIntegrationByProcessId: async (processId: string): Promise<ProcessFormIntegration | null> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const integrations = JSON.parse(localStorage.getItem("processFormIntegration") || "[]");
-        const integration = integrations.find((i: ProcessFormIntegration) => i.processId === processId);
-        resolve(integration || null);
-      }, 300);
-    });
-  },
-  
   createIntegration: async (integration: Omit<ProcessFormIntegration, "id" | "createdAt">): Promise<ProcessFormIntegration> => {
     return new Promise((resolve) => {
       setTimeout(() => {
         const integrations = JSON.parse(localStorage.getItem("processFormIntegration") || "[]");
+        const newIntegration: ProcessFormIntegration = {
+          ...integration,
+          id: crypto.randomUUID(),
+          createdAt: new Date().toISOString(),
+        };
         
-        // Check if an integration already exists for this process
-        const existingIndex = integrations.findIndex((i: ProcessFormIntegration) => i.processId === integration.processId);
+        integrations.push(newIntegration);
+        localStorage.setItem("processFormIntegration", JSON.stringify(integrations));
+        resolve(newIntegration);
+      }, 500);
+    });
+  },
+  
+  updateIntegration: async (id: string, integration: Omit<ProcessFormIntegration, "id" | "createdAt">): Promise<ProcessFormIntegration> => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const integrations = JSON.parse(localStorage.getItem("processFormIntegration") || "[]");
+        const index = integrations.findIndex((i: ProcessFormIntegration) => i.id === id);
         
-        if (existingIndex !== -1) {
-          // Update existing integration
-          const updatedIntegration = {
-            ...integrations[existingIndex],
-            formId: integration.formId,
-            updatedAt: new Date().toISOString(),
-          };
-          
-          integrations[existingIndex] = updatedIntegration;
-          localStorage.setItem("processFormIntegration", JSON.stringify(integrations));
-          resolve(updatedIntegration);
-        } else {
-          // Create new integration
-          const newIntegration: ProcessFormIntegration = {
-            ...integration,
-            id: crypto.randomUUID(),
-            createdAt: new Date().toISOString(),
-          };
-          
-          integrations.push(newIntegration);
-          localStorage.setItem("processFormIntegration", JSON.stringify(integrations));
-          resolve(newIntegration);
+        if (index === -1) {
+          reject(new Error("Integration not found"));
+          return;
         }
+        
+        const updatedIntegration = {
+          ...integrations[index],
+          ...integration,
+        };
+        
+        integrations[index] = updatedIntegration;
+        localStorage.setItem("processFormIntegration", JSON.stringify(integrations));
+        resolve(updatedIntegration);
       }, 500);
     });
   },

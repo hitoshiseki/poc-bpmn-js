@@ -111,7 +111,7 @@ const ProcessEditor = () => {
     }
     
     const data = {
-      ...values,
+      ...values, // This ensures name and description are included and non-optional
       xml: bpmnXml,
     };
     
