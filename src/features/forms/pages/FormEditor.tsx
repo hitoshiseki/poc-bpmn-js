@@ -109,8 +109,10 @@ const FormEditor = () => {
       return;
     }
     
+    // Ensure we're passing all required fields with proper types
     const data = {
-      ...values, // This ensures name and description are included and non-optional
+      name: values.name, // Explicitly use the name from the form values
+      description: values.description, // Explicitly use the description from the form values
       schema: formSchema,
     };
     

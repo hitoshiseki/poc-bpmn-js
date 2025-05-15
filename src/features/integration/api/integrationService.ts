@@ -21,6 +21,16 @@ export const integrationService = {
     });
   },
   
+  getIntegrationByProcessId: async (processId: string): Promise<ProcessFormIntegration | null> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const integrations = JSON.parse(localStorage.getItem("processFormIntegration") || "[]");
+        const integration = integrations.find((i: ProcessFormIntegration) => i.processId === processId);
+        resolve(integration || null);
+      }, 300);
+    });
+  },
+  
   createIntegration: async (integration: Omit<ProcessFormIntegration, "id" | "createdAt">): Promise<ProcessFormIntegration> => {
     return new Promise((resolve) => {
       setTimeout(() => {
