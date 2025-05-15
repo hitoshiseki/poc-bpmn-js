@@ -5,13 +5,13 @@ import { formService } from "../api/formService";
 import { integrationService } from "@/features/integration/api/integrationService";
 import { processService } from "@/features/bpmn/api/processService";
 import { Button } from "@/components/ui/button";
-import { 
+import {
   Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle 
+  CardTitle
 } from "@/components/ui/card";
 import {
   ArrowLeft,
@@ -20,6 +20,7 @@ import {
 import { FormViewer } from "../components/FormViewer";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { BpmnProcess, DynamicForm } from "../../../lib/types";
 
 const FormView = () => {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ const FormView = () => {
   const { data: linkedProcesses = [] } = useQuery({
     queryKey: ["processes", "byForm", id],
     queryFn: async () => {
-      const processPromises = formIntegrations.map(i => 
+      const processPromises = formIntegrations.map(i =>
         processService.getProcessById(i.processId)
       );
       const processes = await Promise.all(processPromises);
@@ -53,7 +54,7 @@ const FormView = () => {
     enabled: formIntegrations.length > 0,
   });
 
-  const handleFormSubmit = (data: any) => {
+  const handleFormSubmit = (data: DynamicForm) => {
     console.log("Form submitted with data:", data);
     toast.success("Form submitted successfully!");
   };
@@ -120,7 +121,7 @@ const FormView = () => {
               </div>
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Fields</h3>
-                <p>{form.schema.components?.filter((c: any) => c.key)?.length || 0} fields</p>
+                <p>{form.schema.components?.filter((c) => c.key)?.length || 0} fields</p>
               </div>
             </CardContent>
           </Card>
@@ -135,12 +136,12 @@ const FormView = () => {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
-                  {linkedProcesses.map((process: any) => (
+                  {linkedProcesses.map((process: BpmnProcess) => (
                     <li key={process.id} className="flex items-center justify-between">
                       <span>{process.name}</span>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => navigate(`/processes/${process.id}`)}
                       >
                         View

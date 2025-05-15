@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -7,13 +6,13 @@ import { BpmnModeler } from "../components/BpmnModeler";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { 
+import {
   Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle 
+  CardTitle
 } from "@/components/ui/card";
 import { Save, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -32,8 +31,8 @@ import { BpmnProcess } from "@/lib/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const processFormSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  description: z.string().min(5, { message: "Description must be at least 5 characters" }),
+  name: z.string().min(2, { message: "O nome deve ter pelo menos 2 caracteres" }),
+  description: z.string().min(5, { message: "A descrição deve ter pelo menos 5 caracteres" }),
 });
 
 type ProcessFormValues = z.infer<typeof processFormSchema>;
@@ -44,9 +43,9 @@ const ProcessEditor = () => {
   const queryClient = useQueryClient();
   const isEditMode = Boolean(id);
   const isMobile = useIsMobile();
-  
+
   const [bpmnXml, setBpmnXml] = useState<string>("");
-  
+
   const form = useForm<ProcessFormValues>({
     resolver: zodResolver(processFormSchema),
     defaultValues: {
@@ -54,14 +53,14 @@ const ProcessEditor = () => {
       description: "",
     },
   });
-  
+
   // Fetch process data if in edit mode
   const { data: process, isLoading } = useQuery({
     queryKey: ["process", id],
     queryFn: () => processService.getProcessById(id!),
     enabled: isEditMode,
   });
-  
+
   // Set form values when process data is loaded
   useEffect(() => {
     if (process) {
@@ -72,21 +71,21 @@ const ProcessEditor = () => {
       setBpmnXml(process.xml);
     }
   }, [process, form]);
-  
+
   // Create process mutation
   const createProcessMutation = useMutation({
     mutationFn: (data: Omit<BpmnProcess, "id" | "createdAt" | "updatedAt">) =>
       processService.createProcess(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["processes"] });
-      toast.success("Process created successfully");
+      toast.success("Processo criado com sucesso");
       navigate("/processes");
     },
     onError: () => {
-      toast.error("Failed to create process");
+      toast.error("Falha ao criar processo");
     },
   });
-  
+
   // Update process mutation
   const updateProcessMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<BpmnProcess> }) =>
@@ -94,38 +93,38 @@ const ProcessEditor = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["processes"] });
       queryClient.invalidateQueries({ queryKey: ["process", id] });
-      toast.success("Process updated successfully");
+      toast.success("Processo atualizado com sucesso");
       navigate("/processes");
     },
     onError: () => {
-      toast.error("Failed to update process");
+      toast.error("Falha ao atualizar processo");
     },
   });
-  
+
   const onBpmnChange = (xml: string) => {
     setBpmnXml(xml);
   };
-  
+
   const onSubmit = (values: ProcessFormValues) => {
     if (!bpmnXml) {
-      toast.error("BPMN diagram is required");
+      toast.error("O diagrama BPMN é obrigatório");
       return;
     }
-    
+
     // Ensure we're passing all required fields with proper types
     const data = {
-      name: values.name, 
+      name: values.name,
       description: values.description,
       xml: bpmnXml,
     };
-    
+
     if (isEditMode && id) {
       updateProcessMutation.mutate({ id, data });
     } else {
       createProcessMutation.mutate(data as Omit<BpmnProcess, "id" | "createdAt" | "updatedAt">);
     }
   };
-  
+
   return (
     <div className="space-y-6 py-6">
       <div className="flex items-center">
@@ -133,16 +132,36 @@ const ProcessEditor = () => {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h2 className="ml-4 text-3xl font-bold">
-          {isEditMode ? "Edit Process" : "New Process"}
+          {isEditMode ? "Editar Processo" : "Novo Processo"}
         </h2>
       </div>
-      
-      <div className="grid gap-6 xl:grid-cols-3">
-        <Card className={`${isMobile || !isMobile && window.innerWidth < 1280 ? 'w-full' : ''} xl:col-span-1`}>
+
+      <div className="grid gap-6">
+        <Card className={`h-[calc(100vh-250px)] ${isMobile || !isMobile && window.innerWidth < 1280 ? 'w-full' : ''}`}>
           <CardHeader>
-            <CardTitle>Process Details</CardTitle>
+            <CardTitle>Diagrama do Processo</CardTitle>
             <CardDescription>
-              Enter the basic information about your BPMN process
+              Desenhe seu diagrama BPMN usando o modelador abaixo
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="h-[calc(100%-130px)]">
+            {(isLoading && isEditMode) ? (
+              <div className="flex h-full w-full items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+              </div>
+            ) : (
+              <BpmnModeler
+                initialXml={bpmnXml}
+                onChange={onBpmnChange}
+              />
+            )}
+          </CardContent>
+        </Card>
+        <Card className={`${isMobile || !isMobile && window.innerWidth < 1280 ? 'w-full' : ''}`}>
+          <CardHeader>
+            <CardTitle>Detalhes do Processo</CardTitle>
+            <CardDescription>
+              Insira as informações básicas sobre seu processo BPMN
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -153,24 +172,24 @@ const ProcessEditor = () => {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Name</FormLabel>
+                      <FormLabel>Nome</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter process name" {...field} />
+                        <Input placeholder="Digite o nome do processo" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>Descrição</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Enter process description"
+                          placeholder="Digite a descrição do processo"
                           rows={4}
                           {...field}
                         />
@@ -179,38 +198,17 @@ const ProcessEditor = () => {
                     </FormItem>
                   )}
                 />
-                
-                <Button 
+
+                <Button
                   type="submit"
                   className="w-full"
                   disabled={isLoading || createProcessMutation.isPending || updateProcessMutation.isPending}
                 >
                   <Save className="mr-2 h-4 w-4" />
-                  {isEditMode ? "Update Process" : "Save Process"}
+                  {isEditMode ? "Atualizar Processo" : "Salvar Processo"}
                 </Button>
               </form>
             </Form>
-          </CardContent>
-        </Card>
-        
-        <Card className={`h-[calc(100vh-250px)] ${isMobile || !isMobile && window.innerWidth < 1280 ? 'w-full' : ''} xl:col-span-2`}>
-          <CardHeader>
-            <CardTitle>Process Diagram</CardTitle>
-            <CardDescription>
-              Design your BPMN process diagram using the modeler below
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="h-[calc(100%-130px)]">
-            {(isLoading && isEditMode) ? (
-              <div className="flex h-full w-full items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-              </div>
-            ) : (
-              <BpmnModeler 
-                initialXml={bpmnXml} 
-                onChange={onBpmnChange} 
-              />
-            )}
           </CardContent>
         </Card>
       </div>

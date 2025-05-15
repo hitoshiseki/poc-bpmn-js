@@ -1,17 +1,16 @@
-
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { processService } from "../api/processService";
 import { integrationService } from "@/features/integration/api/integrationService";
 import { formService } from "@/features/forms/api/formService";
 import { Button } from "@/components/ui/button";
-import { 
+import {
   Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle 
+  CardTitle
 } from "@/components/ui/card";
 import {
   ArrowLeft,
@@ -40,7 +39,7 @@ const ProcessView = () => {
 
   const { data: linkedForm, isLoading: isFormLoading } = useQuery({
     queryKey: ["form", integration?.formId],
-    queryFn: () => formService.getFormById(integration?.formId!),
+    queryFn: () => formService.getFormById(integration?.formId),
     enabled: Boolean(integration?.formId),
   });
 
@@ -56,10 +55,10 @@ const ProcessView = () => {
     return (
       <div className="flex h-[calc(100vh-120px)] items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold">Process not found</h2>
-          <p className="text-muted-foreground">The requested process does not exist</p>
+          <h2 className="text-2xl font-bold">Processo não encontrado</h2>
+          <p className="text-muted-foreground">O processo solicitado não existe</p>
           <Button onClick={() => navigate("/processes")} className="mt-4">
-            Go back to processes
+            Voltar para processos
           </Button>
         </div>
       </div>
@@ -79,21 +78,21 @@ const ProcessView = () => {
           <Button asChild variant="outline">
             <span onClick={() => navigate(`/processes/${id}/edit`)}>
               <Edit2 className="mr-2 h-4 w-4" />
-              Edit Process
+              Editar Processo
             </span>
           </Button>
           {integration ? (
             <Button asChild variant="outline">
               <span onClick={() => navigate(`/integration/${integration.id}`)}>
                 <LinkIcon className="mr-2 h-4 w-4" />
-                View Integration
+                Ver Integração
               </span>
             </Button>
           ) : (
             <Button asChild>
               <span onClick={() => navigate(`/integration?processId=${id}`)}>
                 <LinkIcon className="mr-2 h-4 w-4" />
-                Link to Form
+                Vincular ao Formulário
               </span>
             </Button>
           )}
@@ -103,39 +102,39 @@ const ProcessView = () => {
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle>Process Details</CardTitle>
+            <CardTitle>Detalhes do Processo</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Description</h3>
+              <h3 className="text-sm font-medium text-muted-foreground">Descrição</h3>
               <p>{process.description}</p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Created</h3>
-              <p>{format(new Date(process.createdAt), "PPP 'at' pp")}</p>
+              <h3 className="text-sm font-medium text-muted-foreground">Criado</h3>
+              <p>{format(new Date(process.createdAt), "PPP 'às' pp")}</p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Last Updated</h3>
-              <p>{format(new Date(process.updatedAt), "PPP 'at' pp")}</p>
+              <h3 className="text-sm font-medium text-muted-foreground">Última Atualização</h3>
+              <p>{format(new Date(process.updatedAt), "PPP 'às' pp")}</p>
             </div>
           </CardContent>
           <CardFooter className="border-t p-4">
             <div className="w-full">
-              <h3 className="mb-2 text-sm font-medium text-muted-foreground">Linked Form</h3>
+              <h3 className="mb-2 text-sm font-medium text-muted-foreground">Formulário Vinculado</h3>
               {linkedForm ? (
                 <div className="flex items-center justify-between">
                   <span>{linkedForm.name}</span>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => navigate(`/forms/${linkedForm.id}`)}
                   >
-                    View Form
+                    Ver Formulário
                   </Button>
                 </div>
               ) : (
                 <div className="text-sm text-muted-foreground">
-                  No form linked to this process
+                  Nenhum formulário vinculado a este processo
                 </div>
               )}
             </div>
@@ -144,9 +143,9 @@ const ProcessView = () => {
 
         <Card className="h-[calc(100vh-250px)] lg:col-span-2">
           <CardHeader>
-            <CardTitle>Process Diagram</CardTitle>
+            <CardTitle>Diagrama do Processo</CardTitle>
             <CardDescription>
-              BPMN diagram visualization (read-only)
+              Visualização do diagrama BPMN (somente leitura)
             </CardDescription>
           </CardHeader>
           <CardContent className="h-[calc(100%-130px)]">

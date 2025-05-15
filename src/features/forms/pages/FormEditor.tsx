@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -7,12 +6,12 @@ import { FormBuilder } from "../components/FormBuilder";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { 
+import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle 
+  CardTitle
 } from "@/components/ui/card";
 import { Save, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -27,15 +26,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { DynamicForm } from "@/lib/types";
+import { DynamicForm, Schema } from "@/lib/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-const formSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  description: z.string().min(5, { message: "Description must be at least 5 characters" }),
+const formSchemaZod = z.object({
+  name: z.string().min(2, { message: "O nome deve ter pelo menos 2 caracteres" }),
+  description: z.string().min(5, { message: "A descrição deve ter pelo menos 5 caracteres" }),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof formSchemaZod>;
 
 // Default form schema with proper structure
 const DEFAULT_FORM_SCHEMA = {
@@ -43,16 +42,16 @@ const DEFAULT_FORM_SCHEMA = {
   components: [
     {
       type: "text",
-      text: "# My New Form\n\nThis is a new dynamic form."
+      text: "# Meu Novo Formulário\n\nEste é um novo formulário dinâmico."
     },
     {
       key: "textfield",
-      label: "Text Field",
+      label: "Campo de Texto",
       type: "textfield"
     },
     {
       key: "checkbox",
-      label: "Checkbox",
+      label: "Caixa de Seleção",
       type: "checkbox"
     }
   ],
@@ -65,24 +64,24 @@ const FormEditor = () => {
   const queryClient = useQueryClient();
   const isEditMode = Boolean(id);
   const isMobile = useIsMobile();
-  
-  const [formSchema, setFormSchema] = useState<any>(DEFAULT_FORM_SCHEMA);
-  
+
+  const [formSchema, setFormSchema] = useState<Schema>(DEFAULT_FORM_SCHEMA);
+
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchemaZod),
     defaultValues: {
       name: "",
       description: "",
     },
   });
-  
+
   // Fetch form data if in edit mode
   const { data: existingForm, isLoading } = useQuery({
     queryKey: ["form", id],
     queryFn: () => formService.getFormById(id!),
     enabled: isEditMode,
   });
-  
+
   // Set form values when form data is loaded
   useEffect(() => {
     if (existingForm) {
@@ -90,44 +89,44 @@ const FormEditor = () => {
         name: existingForm.name,
         description: existingForm.description,
       });
-      
+
       // Ensure the schema has the proper structure
       if (existingForm.schema) {
         const validSchema = { ...existingForm.schema };
-        
+
         if (!validSchema.type) {
           validSchema.type = "default";
         }
-        
+
         if (!validSchema.components || !Array.isArray(validSchema.components)) {
           validSchema.components = DEFAULT_FORM_SCHEMA.components;
         }
-        
+
         if (!validSchema.schemaVersion) {
           validSchema.schemaVersion = 5;
         }
-        
+
         setFormSchema(validSchema);
       } else {
         setFormSchema(DEFAULT_FORM_SCHEMA);
       }
     }
   }, [existingForm, form]);
-  
+
   // Create form mutation
   const createFormMutation = useMutation({
     mutationFn: (data: Omit<DynamicForm, "id" | "createdAt" | "updatedAt">) =>
       formService.createForm(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["forms"] });
-      toast.success("Form created successfully");
+      toast.success("Formulário criado com sucesso");
       navigate("/forms");
     },
     onError: () => {
-      toast.error("Failed to create form");
+      toast.error("Falha ao criar formulário");
     },
   });
-  
+
   // Update form mutation
   const updateFormMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<DynamicForm> }) =>
@@ -135,37 +134,37 @@ const FormEditor = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["forms"] });
       queryClient.invalidateQueries({ queryKey: ["form", id] });
-      toast.success("Form updated successfully");
+      toast.success("Formulário atualizado com sucesso");
       navigate("/forms");
     },
     onError: () => {
-      toast.error("Failed to update form");
+      toast.error("Falha ao atualizar formulário");
     },
   });
-  
-  const onFormSchemaChange = (schema: any) => {
+
+  const onFormSchemaChange = (schema: Schema) => {
     setFormSchema(schema);
   };
-  
+
   const onSubmit = (values: FormValues) => {
     if (!formSchema) {
-      toast.error("Form schema is required");
+      toast.error("O esquema do formulário é obrigatório");
       return;
     }
-    
+
     const data = {
       name: values.name,
       description: values.description,
       schema: formSchema,
     };
-    
+
     if (isEditMode && id) {
       updateFormMutation.mutate({ id, data });
     } else {
       createFormMutation.mutate(data as Omit<DynamicForm, "id" | "createdAt" | "updatedAt">);
     }
   };
-  
+
   return (
     <div className="space-y-6 py-6">
       <div className="flex items-center">
@@ -173,16 +172,37 @@ const FormEditor = () => {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h2 className="ml-4 text-3xl font-bold">
-          {isEditMode ? "Edit Form" : "New Form"}
+          {isEditMode ? "Editar Formulário" : "Novo Formulário"}
         </h2>
       </div>
-      
-      <div className="grid gap-6 xl:grid-cols-3">
-        <Card className={`${isMobile || !isMobile && window.innerWidth < 1280 ? 'w-full' : ''} xl:col-span-1`}>
+
+      <div className="grid gap-6">
+
+        <Card className={`h-[calc(100vh-250px)] ${isMobile || !isMobile && window.innerWidth < 1280 ? 'w-full' : ''}`}>
           <CardHeader>
-            <CardTitle>Form Details</CardTitle>
+            <CardTitle>Construtor de Formulário</CardTitle>
             <CardDescription>
-              Enter the basic information about your form
+              Projete seu formulário usando o construtor abaixo
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="h-[calc(100%-130px)]">
+            {(isLoading && isEditMode) ? (
+              <div className="flex h-full w-full items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+              </div>
+            ) : (
+              <FormBuilder
+                initialSchema={formSchema}
+                onChange={onFormSchemaChange}
+              />
+            )}
+          </CardContent>
+        </Card>
+        <Card className={`${isMobile || !isMobile && window.innerWidth < 1280 ? 'w-full' : ''}`}>
+          <CardHeader>
+            <CardTitle>Detalhes do Formulário</CardTitle>
+            <CardDescription>
+              Insira as informações básicas sobre seu formulário
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -193,24 +213,24 @@ const FormEditor = () => {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Name</FormLabel>
+                      <FormLabel>Nome</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter form name" {...field} />
+                        <Input placeholder="Digite o nome do formulário" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>Descrição</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Enter form description"
+                          placeholder="Digite a descrição do formulário"
                           rows={4}
                           {...field}
                         />
@@ -219,38 +239,17 @@ const FormEditor = () => {
                     </FormItem>
                   )}
                 />
-                
-                <Button 
+
+                <Button
                   type="submit"
                   className="w-full"
                   disabled={isLoading || createFormMutation.isPending || updateFormMutation.isPending}
                 >
                   <Save className="mr-2 h-4 w-4" />
-                  {isEditMode ? "Update Form" : "Save Form"}
+                  {isEditMode ? "Atualizar Formulário" : "Salvar Formulário"}
                 </Button>
               </form>
             </Form>
-          </CardContent>
-        </Card>
-        
-        <Card className={`h-[calc(100vh-250px)] ${isMobile || !isMobile && window.innerWidth < 1280 ? 'w-full' : ''} xl:col-span-2`}>
-          <CardHeader>
-            <CardTitle>Form Builder</CardTitle>
-            <CardDescription>
-              Design your form using the form builder below
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="h-[calc(100%-130px)]">
-            {(isLoading && isEditMode) ? (
-              <div className="flex h-full w-full items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-              </div>
-            ) : (
-              <FormBuilder 
-                initialSchema={formSchema} 
-                onChange={onFormSchemaChange} 
-              />
-            )}
           </CardContent>
         </Card>
       </div>

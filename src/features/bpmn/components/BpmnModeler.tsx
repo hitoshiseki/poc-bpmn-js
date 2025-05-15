@@ -1,5 +1,4 @@
-
-import { useEffect, useRef, useState } from "react";
+import { Ref, useEffect, useRef, useState } from "react";
 import BpmnJS from "bpmn-js/dist/bpmn-modeler.production.min.js";
 import "bpmn-js/dist/assets/diagram-js.css";
 import "bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css";
@@ -47,18 +46,18 @@ export const BpmnModeler: React.FC<BpmnModelerProps> = ({
   readOnly = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const bpmnModelerRef = useRef<any>(null);
+  const bpmnModelerRef = useRef(null);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Use effect for initializing the BPMN modeler
   useEffect(() => {
     if (!containerRef.current) return;
-    
+
     // Clean up any previous instance
     if (bpmnModelerRef.current) {
       bpmnModelerRef.current.destroy();
     }
-    
+
     // Create the BPMN modeler instance
     const modeler = new BpmnJS({
       container: containerRef.current,
@@ -67,7 +66,7 @@ export const BpmnModeler: React.FC<BpmnModelerProps> = ({
         parent: "#properties-panel",
       },
     });
-    
+
     // Make editor read-only if specified
     if (readOnly) {
       modeler.get("editorActions").register({
@@ -78,12 +77,12 @@ export const BpmnModeler: React.FC<BpmnModelerProps> = ({
         },
       });
     }
-    
+
     bpmnModelerRef.current = modeler;
-    
+
     // Reset error state on new initialization
     setError(null);
-    
+
     return () => {
       if (bpmnModelerRef.current) {
         bpmnModelerRef.current.destroy();
@@ -91,14 +90,14 @@ export const BpmnModeler: React.FC<BpmnModelerProps> = ({
       }
     };
   }, []);
-  
+
   // Separate effect for handling XML import
   useEffect(() => {
     if (!bpmnModelerRef.current) return;
-    
+
     const modeler = bpmnModelerRef.current;
     const xmlToUse = initialXml && isValidBpmnXml(initialXml) ? initialXml : DEFAULT_DIAGRAM_XML;
-    
+
     // Import the XML diagram
     modeler.importXML(xmlToUse)
       .then(() => {
@@ -107,7 +106,7 @@ export const BpmnModeler: React.FC<BpmnModelerProps> = ({
           modeler.get("editorActions").trigger("toggleMode");
         }
         modeler.get("canvas").zoom("fit-viewport");
-        
+
         // If it's a new diagram and onChange exists, notify parent of default XML
         if (!initialXml && onChange) {
           onChange(DEFAULT_DIAGRAM_XML);
@@ -116,7 +115,7 @@ export const BpmnModeler: React.FC<BpmnModelerProps> = ({
       .catch((err: Error) => {
         console.error("Error importing BPMN XML", err);
         setError("Falha ao carregar o diagrama BPMN. Utilizando diagrama padrão.");
-        
+
         // Fallback to default diagram on error
         modeler.importXML(DEFAULT_DIAGRAM_XML)
           .then(() => {
@@ -124,7 +123,7 @@ export const BpmnModeler: React.FC<BpmnModelerProps> = ({
               modeler.get("editorActions").trigger("toggleMode");
             }
             modeler.get("canvas").zoom("fit-viewport");
-            
+
             // Notify parent of the default XML being used
             if (onChange) {
               onChange(DEFAULT_DIAGRAM_XML);
@@ -135,14 +134,14 @@ export const BpmnModeler: React.FC<BpmnModelerProps> = ({
           });
       });
   }, [initialXml, readOnly]);
-  
+
   // Setup event listeners for XML changes
   useEffect(() => {
     if (!bpmnModelerRef.current || !onChange) return;
-    
+
     const modeler = bpmnModelerRef.current;
     const eventBus = modeler.get("eventBus");
-    
+
     // Listen for change events in the diagram
     const onChanged = () => {
       modeler.saveXML({ format: true })
@@ -153,14 +152,14 @@ export const BpmnModeler: React.FC<BpmnModelerProps> = ({
           console.error("Error saving BPMN XML", err);
         });
     };
-    
+
     eventBus.on("commandStack.changed", onChanged);
-    
+
     return () => {
       eventBus.off("commandStack.changed", onChanged);
     };
   }, [onChange]);
-  
+
   return (
     <div className="relative h-full">
       {error && (

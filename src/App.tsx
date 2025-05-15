@@ -1,4 +1,3 @@
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
@@ -12,7 +11,7 @@ import AppLayout from "@/app/AppLayout";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60 * 1000, // 1 minute
+      staleTime: 60 * 1000, // 1 minuto
     },
   },
 });
@@ -30,7 +29,7 @@ const initializeLocalStorage = () => {
   }
 };
 
-function App() {
+function App () {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {

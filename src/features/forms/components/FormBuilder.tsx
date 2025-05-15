@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { FormEditor } from "@bpmn-io/form-js-editor";
 import "@bpmn-io/form-js-editor/dist/assets/form-js-editor.css";
+import { Schema } from "../../../lib/types";
 
 const DEFAULT_FORM_SCHEMA = {
   type: "default",
@@ -25,11 +26,11 @@ const DEFAULT_FORM_SCHEMA = {
 };
 
 interface FormBuilderProps {
-  initialSchema?: any;
-  onChange?: (schema: any) => void;
+  initialSchema?: Schema;
+  onChange?: (schema: Schema) => void;
 }
 
-export function FormBuilder({ initialSchema, onChange }: FormBuilderProps) {
+export function FormBuilder ({ initialSchema, onChange }: FormBuilderProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const formEditorRef = useRef<FormEditor | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +40,7 @@ export function FormBuilder({ initialSchema, onChange }: FormBuilderProps) {
 
     // Make sure we have a valid schema
     const schemaToUse = validateAndFixSchema(initialSchema);
-    
+
     const formEditor = new FormEditor({
       container: containerRef.current
     });
@@ -54,7 +55,7 @@ export function FormBuilder({ initialSchema, onChange }: FormBuilderProps) {
       .catch(err => {
         console.error('Error importing form:', err);
         setError(`Error importing form: ${err.message}`);
-        
+
         // Try again with the default schema
         if (initialSchema !== DEFAULT_FORM_SCHEMA) {
           console.log('Trying to import default schema instead');
@@ -90,29 +91,29 @@ export function FormBuilder({ initialSchema, onChange }: FormBuilderProps) {
   }, [initialSchema, onChange]);
 
   // Helper function to validate and fix schema if needed
-  const validateAndFixSchema = (schema: any): any => {
+  const validateAndFixSchema = (schema: Schema): unknown => {
     if (!schema) {
       return DEFAULT_FORM_SCHEMA;
     }
 
     // Ensure schema has the required properties
     const validSchema = { ...schema };
-    
+
     // Make sure it has a type
     if (!validSchema.type) {
       validSchema.type = "default";
     }
-    
+
     // Make sure it has the components array
     if (!validSchema.components || !Array.isArray(validSchema.components)) {
       validSchema.components = DEFAULT_FORM_SCHEMA.components;
     }
-    
+
     // Make sure it has a schema version
     if (!validSchema.schemaVersion) {
       validSchema.schemaVersion = 5;
     }
-    
+
     return validSchema;
   };
 

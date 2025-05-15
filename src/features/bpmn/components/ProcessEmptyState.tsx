@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Workflow, PlusCircle } from "lucide-react";
@@ -10,14 +9,14 @@ export const ProcessEmptyState = () => {
         <div className="mb-4 rounded-full bg-primary/10 p-3">
           <Workflow className="h-10 w-10 text-primary" />
         </div>
-        <h2 className="text-2xl font-bold">No BPMN processes found</h2>
+        <h2 className="text-2xl font-bold">Nenhum processo BPMN encontrado</h2>
         <p className="mt-2 text-muted-foreground">
-          Create your first BPMN process to get started with modeling your business workflows.
+          Crie seu primeiro processo BPMN para começar a modelar seus fluxos de trabalho.
         </p>
         <Button asChild className="mt-6">
           <Link to="/processes/new">
             <PlusCircle className="mr-2 h-4 w-4" />
-            Create Process
+            Criar Processo
           </Link>
         </Button>
       </div>
