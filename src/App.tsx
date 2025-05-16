@@ -49,7 +49,7 @@ function App () {
     <QueryClientProvider client={queryClient}>
       <AppProvider>
         <TooltipProvider>
-          <Router>
+          <Router basename="/poc-bpmn-js">
             <AppLayout />
           </Router>
           <Toaster />
