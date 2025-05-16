@@ -1,88 +1,185 @@
-import { DynamicForm, ProcessFormIntegration } from "@/lib/types";
+import { DynamicForm } from "@/lib/types";
+import { v4 as uuidv4 } from "uuid";
+
+// Default form schema for a simple application form
+const DEFAULT_FORM_SCHEMA = {
+  type: "default",
+  components: [
+    {
+      type: "text",
+      text: "# Formulário de Solicitação\n\nPreencha os dados abaixo para enviar sua solicitação."
+    },
+    {
+      key: "nome",
+      label: "Nome Completo",
+      type: "textfield",
+      placeholder: "Digite seu nome completo",
+      validate: {
+        required: true
+      }
+    },
+    {
+      key: "email",
+      label: "Email",
+      type: "textfield",
+      inputType: "email",
+      placeholder: "Digite seu email",
+      validate: {
+        required: true
+      }
+    },
+    {
+      key: "telefone",
+      label: "Telefone",
+      type: "textfield",
+      placeholder: "Digite seu telefone",
+      validate: {
+        required: true
+      }
+    },
+    {
+      key: "assunto",
+      label: "Assunto da Solicitação",
+      type: "select",
+      placeholder: "Selecione o assunto",
+      data: {
+        values: [
+          {
+            label: "Informação",
+            value: "informacao"
+          },
+          {
+            label: "Reclamação",
+            value: "reclamacao"
+          },
+          {
+            label: "Sugestão",
+            value: "sugestao"
+          },
+          {
+            label: "Outro",
+            value: "outro"
+          }
+        ]
+      },
+      validate: {
+        required: true
+      }
+    },
+    {
+      key: "descricao",
+      label: "Descrição",
+      type: "textarea",
+      placeholder: "Descreva sua solicitação",
+      rows: 4,
+      validate: {
+        required: true
+      }
+    },
+    {
+      key: "termos",
+      label: "Concordo com os termos e condições",
+      type: "checkbox",
+      validate: {
+        required: true
+      }
+    },
+    {
+      key: "submit",
+      label: "Enviar Solicitação",
+      type: "button",
+      theme: "primary"
+    }
+  ],
+  schemaVersion: 5
+};
+
+// Mock storage for forms
+const formsData: DynamicForm[] = [];
+
+// Initialize default form if none exists
+const initializeDefaultForm = () => {
+  if (formsData.length === 0) {
+    const now = new Date().toISOString();
+    const defaultForm: DynamicForm = {
+      id: uuidv4(),
+      name: "Formulário de Solicitação",
+      description: "Formulário para envio de solicitações",
+      schema: DEFAULT_FORM_SCHEMA,
+      createdAt: now,
+      updatedAt: now
+    };
+    formsData.push(defaultForm);
+  }
+};
+
+// Get all forms
+const getAllForms = async (): Promise<DynamicForm[]> => {
+  // Initialize default form if none exists
+  initializeDefaultForm();
+
+  return [...formsData];
+};
+
+// Get form by ID
+const getFormById = async (id: string): Promise<DynamicForm> => {
+  initializeDefaultForm();
+
+  const form = formsData.find((f) => f.id === id);
+  if (!form) {
+    throw new Error(`Form with ID ${id} not found`);
+  }
+  return { ...form };
+};
+
+// Create a new form
+const createForm = async (
+  data: Omit<DynamicForm, "id" | "createdAt" | "updatedAt">
+): Promise<DynamicForm> => {
+  const now = new Date().toISOString();
+  const newForm: DynamicForm = {
+    id: uuidv4(),
+    ...data,
+    createdAt: now,
+    updatedAt: now,
+  };
+  formsData.push(newForm);
+  return { ...newForm };
+};
+
+// Update an existing form
+const updateForm = async (
+  id: string,
+  data: Partial<DynamicForm>
+): Promise<DynamicForm> => {
+  const formIndex = formsData.findIndex((f) => f.id === id);
+  if (formIndex === -1) {
+    throw new Error(`Form with ID ${id} not found`);
+  }
+
+  const updatedForm = {
+    ...formsData[formIndex],
+    ...data,
+    updatedAt: new Date().toISOString(),
+  };
+
+  formsData[formIndex] = updatedForm;
+  return { ...updatedForm };
+};
+
+// Delete a form
+const deleteForm = async (id: string): Promise<void> => {
+  const formIndex = formsData.findIndex((f) => f.id === id);
+  if (formIndex === -1) {
+    throw new Error(`Form with ID ${id} not found`);
+  }
+  formsData.splice(formIndex, 1);
+};
 
 export const formService = {
-  getAllForms: async (): Promise<DynamicForm[]> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const forms = JSON.parse(localStorage.getItem("dynamicForms") || "[]");
-        resolve(forms);
-      }, 300);
-    });
-  },
-
-  getFormById: async (id: string): Promise<DynamicForm | null> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const forms = JSON.parse(localStorage.getItem("dynamicForms") || "[]");
-        const form = forms.find((f: DynamicForm) => f.id === id);
-        resolve(form || null);
-      }, 300);
-    });
-  },
-
-  createForm: async (form: Omit<DynamicForm, "id" | "createdAt" | "updatedAt">): Promise<DynamicForm> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const forms = JSON.parse(localStorage.getItem("dynamicForms") || "[]");
-        const newForm: DynamicForm = {
-          ...form,
-          id: crypto.randomUUID(),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-
-        forms.push(newForm);
-        localStorage.setItem("dynamicForms", JSON.stringify(forms));
-        resolve(newForm);
-      }, 500);
-    });
-  },
-
-  updateForm: async (id: string, form: Partial<DynamicForm>): Promise<DynamicForm> => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const forms = JSON.parse(localStorage.getItem("dynamicForms") || "[]");
-        const index = forms.findIndex((f: DynamicForm) => f.id === id);
-
-        if (index === -1) {
-          reject(new Error("Formulário não encontrado"));
-          return;
-        }
-
-        const updatedForm = {
-          ...forms[index],
-          ...form,
-          updatedAt: new Date().toISOString(),
-        };
-
-        forms[index] = updatedForm;
-        localStorage.setItem("dynamicForms", JSON.stringify(forms));
-        resolve(updatedForm);
-      }, 500);
-    });
-  },
-
-  deleteForm: async (id: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const forms = JSON.parse(localStorage.getItem("dynamicForms") || "[]");
-        const index = forms.findIndex((f: DynamicForm) => f.id === id);
-
-        if (index === -1) {
-          reject(new Error("Formulário não encontrado"));
-          return;
-        }
-
-        forms.splice(index, 1);
-        localStorage.setItem("dynamicForms", JSON.stringify(forms));
-
-        // Also remove any integrations that use this form
-        const integrations = JSON.parse(localStorage.getItem("processFormIntegration") || "[]");
-        const updatedIntegrations = integrations.filter((i: ProcessFormIntegration) => i.formId !== id);
-        localStorage.setItem("processFormIntegration", JSON.stringify(updatedIntegrations));
-
-        resolve();
-      }, 500);
-    });
-  },
+  getAllForms,
+  getFormById,
+  createForm,
+  updateForm,
+  deleteForm,
 };

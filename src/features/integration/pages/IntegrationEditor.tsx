@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { integrationService } from "../api/integrationService";
@@ -32,14 +32,21 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ProcessFormIntegration } from "@/lib/types";
+import { BpmnElement, ElementRegistry, ProcessFormIntegration } from "@/lib/types";
+import * as BpmnJs from "bpmn-js/dist/bpmn-navigated-viewer.production.min.js";
 
 const integrationSchema = z.object({
   processId: z.string().min(1, "Processo é obrigatório"),
   formId: z.string().min(1, "Formulário é obrigatório"),
+  taskId: z.string().min(1, "Tarefa do processo é obrigatória"),
 });
 
 type IntegrationFormValues = z.infer<typeof integrationSchema>;
+
+interface ProcessTask {
+  id: string;
+  name: string;
+}
 
 const IntegrationEditor = () => {
   const navigate = useNavigate();
@@ -50,6 +57,7 @@ const IntegrationEditor = () => {
 
   const queryClient = useQueryClient();
   const isEditMode = Boolean(id);
+  const [processTasks, setProcessTasks] = useState<ProcessTask[]>([]);
 
   // Form setup with validation
   const form = useForm<IntegrationFormValues>({
@@ -57,13 +65,14 @@ const IntegrationEditor = () => {
     defaultValues: {
       processId: preselectedProcessId || "",
       formId: "",
+      taskId: "",
     },
   });
 
   // Fetch data
   const { data: integration, isLoading: isLoadingIntegration } = useQuery({
     queryKey: ["integration", id],
-    queryFn: () => integrationService.getIntegrationById(id!),
+    queryFn: () => integrationService.getIntegrationById(id!).catch((error) => console.error(error)),
     enabled: isEditMode,
   });
 
@@ -77,12 +86,85 @@ const IntegrationEditor = () => {
     queryFn: () => formService.getAllForms(),
   });
 
+  const { data: selectedProcess, isLoading: isLoadingSelectedProcess } = useQuery({
+    queryKey: ["process", form.watch("processId")],
+    queryFn: () => processService.getProcessById(form.watch("processId")),
+    enabled: Boolean(form.watch("processId")),
+  });
+
+  // Extract user tasks from BPMN XML
+  useEffect(() => {
+    if (selectedProcess?.xml) {
+      let viewer = null;
+      try {
+        viewer = new BpmnJs.default();
+
+        viewer.importXML(selectedProcess.xml).then(() => {
+          try {
+            const elementRegistry = viewer.get('elementRegistry') as ElementRegistry;
+
+            // Find all user tasks in the process
+            const userTasks = elementRegistry.filter((element: BpmnElement) => element.type === 'bpmn:UserTask' && !!element.businessObject);
+
+            const tasks = userTasks.map((task: BpmnElement) => ({
+              id: task.id,
+              name: task.businessObject?.name || `Task ${task.id}`
+            }));
+
+            setProcessTasks(tasks);
+
+            // If there are no tasks but form has a taskId, reset it
+            if (tasks.length === 0 && form.getValues("taskId")) {
+              form.setValue("taskId", "");
+            }
+
+            // If there's only one task and no taskId is selected, auto-select it
+            if (tasks.length === 1 && !form.getValues("taskId")) {
+              form.setValue("taskId", tasks[0].id);
+            }
+          } catch (error) {
+            console.error("Error processing BPMN elements", error);
+            setProcessTasks([]);
+            form.setValue("taskId", "");
+            toast.error("Erro ao processar elementos do diagrama BPMN");
+          }
+        }).catch((error: Error) => {
+          console.error("Error importing BPMN XML", error);
+          setProcessTasks([]);
+          form.setValue("taskId", "");
+          toast.error("Erro ao importar o XML do processo BPMN");
+        });
+      } catch (error) {
+        console.error("Error initializing BPMN viewer", error);
+        setProcessTasks([]);
+        form.setValue("taskId", "");
+        toast.error("Erro ao inicializar o visualizador BPMN");
+      }
+
+      return () => {
+        if (viewer) {
+          try {
+            viewer.destroy();
+          } catch (error) {
+            console.error("Error destroying BPMN viewer", error);
+          }
+        }
+      };
+    } else {
+      setProcessTasks([]);
+      if (form.getValues("taskId")) {
+        form.setValue("taskId", "");
+      }
+    }
+  }, [selectedProcess, form]);
+
   // Set form values from integration if in edit mode
   useEffect(() => {
     if (integration) {
       form.reset({
         processId: integration.processId,
         formId: integration.formId,
+        taskId: integration.taskId || "",
       });
     }
   }, [integration, form]);
@@ -110,16 +192,26 @@ const IntegrationEditor = () => {
       toast.success("Integração atualizada com sucesso");
       navigate("/integration");
     },
-    onError: () => {
+    onError: (error) => {
+      console.log(error);
       toast.error("Falha ao atualizar integração");
     },
   });
 
   const onSubmit = (values: IntegrationFormValues) => {
+    const selectedTask = processTasks.find(task => task.id === values.taskId);
+
+    if (!selectedTask) {
+      toast.error("Selecione uma tarefa válida do processo");
+      return;
+    }
+
     // Convert the values to the correct type
     const integrationData: Omit<ProcessFormIntegration, "id" | "createdAt"> = {
       processId: values.processId,
       formId: values.formId,
+      taskId: values.taskId,
+      taskName: selectedTask.name
     };
 
     if (isEditMode && id) {
@@ -129,7 +221,16 @@ const IntegrationEditor = () => {
     }
   };
 
-  const isLoading = isLoadingIntegration || isLoadingProcesses || isLoadingForms;
+  console.log(isLoadingIntegration, isLoadingProcesses, isLoadingForms, isLoadingSelectedProcess);
+
+  const isLoadingScreen = isLoadingIntegration || isLoadingProcesses || isLoadingForms || isLoadingSelectedProcess;
+
+  // Handle process change to reset task selection
+  const handleProcessChange = (processId: string) => {
+    form.setValue("processId", processId);
+    form.setValue("taskId", "");
+    setProcessTasks([]);
+  };
 
   return (
     <div className="space-y-6 py-6">
@@ -149,11 +250,11 @@ const IntegrationEditor = () => {
             <CardTitle>Integração Processo-Formulário</CardTitle>
           </div>
           <CardDescription>
-            Vincule um processo BPMN com um formulário dinâmico
+            Vincule uma tarefa específica do processo BPMN com um formulário dinâmico
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {isLoadingScreen ? (
             <div className="py-8 flex justify-center">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
             </div>
@@ -169,7 +270,7 @@ const IntegrationEditor = () => {
                       <FormControl>
                         <Select
                           value={field.value}
-                          onValueChange={field.onChange}
+                          onValueChange={handleProcessChange}
                           disabled={Boolean(preselectedProcessId) || processes.length === 0}
                         >
                           <SelectTrigger>
@@ -187,6 +288,40 @@ const IntegrationEditor = () => {
                       {processes.length === 0 && (
                         <div className="text-sm text-destructive">
                           Nenhum processo disponível. Por favor, crie um processo primeiro.
+                        </div>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="taskId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tarefa do Processo</FormLabel>
+                      <FormControl>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          disabled={processTasks.length === 0 || !form.watch("processId")}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione uma tarefa" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {processTasks.map((task) => (
+                              <SelectItem key={task.id} value={task.id}>
+                                {task.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      {form.watch("processId") && processTasks.length === 0 && (
+                        <div className="text-sm text-destructive">
+                          Este processo não contém tarefas de usuário. Adicione pelo menos uma tarefa de usuário ao processo.
                         </div>
                       )}
                       <FormMessage />
@@ -234,6 +369,7 @@ const IntegrationEditor = () => {
                     disabled={
                       processes.length === 0 ||
                       forms.length === 0 ||
+                      processTasks.length === 0 ||
                       createIntegrationMutation.isPending ||
                       updateIntegrationMutation.isPending
                     }

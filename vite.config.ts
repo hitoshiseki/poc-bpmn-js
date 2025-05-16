@@ -5,7 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: '/poc-bpmn-js',
+  // base: '/poc-bpmn-js',
   server: {
     host: "::",
     port: 8080,

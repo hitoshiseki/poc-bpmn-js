@@ -123,6 +123,10 @@ const IntegrationList = () => {
                 <p className="font-medium">{integration.process?.name || "Processo Desconhecido"}</p>
               </div>
               <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Tarefa</h3>
+                <p className="font-medium">{integration.taskName || "Tarefa Inteira"}</p>
+              </div>
+              <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Formulário</h3>
                 <p className="font-medium">{integration.form?.name || "Formulário Desconhecido"}</p>
               </div>

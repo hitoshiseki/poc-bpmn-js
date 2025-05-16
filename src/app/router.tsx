@@ -5,7 +5,6 @@ import { Route, Routes } from "react-router-dom";
 import Dashboard from "@/features/dashboard/pages/Dashboard";
 import ProcessList from "@/features/bpmn/pages/ProcessList";
 import ProcessEditor from "@/features/bpmn/pages/ProcessEditor";
-import ProcessView from "@/features/bpmn/pages/ProcessView";
 import FormList from "@/features/forms/pages/FormList";
 import FormEditor from "@/features/forms/pages/FormEditor";
 import FormView from "@/features/forms/pages/FormView";
@@ -23,7 +22,7 @@ export const AppRoutes = () => {
       {/* BPMN Process Routes */}
       <Route path="/processes" element={<ProcessList />} />
       <Route path="/processes/new" element={<ProcessEditor />} />
-      <Route path="/processes/:id" element={<ProcessView />} />
+      <Route path="/processes/:id" element={<ProcessEditor mode="view" />} />
       <Route path="/processes/:id/edit" element={<ProcessEditor />} />
 
       {/* Dynamic Forms Routes */}
@@ -34,6 +33,7 @@ export const AppRoutes = () => {
 
       {/* Integration Routes */}
       <Route path="/integration" element={<IntegrationList />} />
+      <Route path="/integration/new" element={<IntegrationEditor />} />
       <Route path="/integration/:id" element={<IntegrationEditor />} />
 
       {/* 404 page */}

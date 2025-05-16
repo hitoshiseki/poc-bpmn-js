@@ -1,91 +1,85 @@
-
 import { ProcessFormIntegration } from "@/lib/types";
+import { v4 as uuidv4 } from "uuid";
+
+// Mock storage for integrations
+const integrationsData: ProcessFormIntegration[] = [];
+
+// Get all integrations
+const getAllIntegrations = async (): Promise<ProcessFormIntegration[]> => {
+  return [...integrationsData];
+};
+
+// Get integration by ID
+const getIntegrationById = async (id: string): Promise<ProcessFormIntegration> => {
+  const integration = integrationsData.find((i) => i.id === id);
+  if (!integration) {
+    throw new Error(`Integration with ID ${id} not found`);
+  }
+  return { ...integration };
+};
+
+// Get integration by process ID
+const getIntegrationByProcessId = async (processId: string): Promise<ProcessFormIntegration | undefined> => {
+  const integration = integrationsData.find((i) => i.processId === processId);
+  return integration ? { ...integration } : undefined;
+};
+
+// Get integrations by process ID and task ID
+const getIntegrationsByProcessTask = async (processId: string, taskId: string): Promise<ProcessFormIntegration | undefined> => {
+  const integration = integrationsData.find(
+    (i) => i.processId === processId && i.taskId === taskId
+  );
+  return integration ? { ...integration } : undefined;
+};
+
+// Create a new integration
+const createIntegration = async (
+  data: Omit<ProcessFormIntegration, "id" | "createdAt">
+): Promise<ProcessFormIntegration> => {
+  const now = new Date().toISOString();
+  const newIntegration: ProcessFormIntegration = {
+    id: uuidv4(),
+    ...data,
+    createdAt: now,
+  };
+  integrationsData.push(newIntegration);
+  return { ...newIntegration };
+};
+
+// Update an existing integration
+const updateIntegration = async (
+  id: string,
+  data: Omit<ProcessFormIntegration, "id" | "createdAt">
+): Promise<ProcessFormIntegration> => {
+  const integrationIndex = integrationsData.findIndex((i) => i.id === id);
+  if (integrationIndex === -1) {
+    throw new Error(`Integration with ID ${id} not found`);
+  }
+
+  const updatedIntegration = {
+    ...integrationsData[integrationIndex],
+    ...data,
+  };
+
+  integrationsData[integrationIndex] = updatedIntegration;
+  return { ...updatedIntegration };
+};
+
+// Delete an integration
+const deleteIntegration = async (id: string): Promise<void> => {
+  const integrationIndex = integrationsData.findIndex((i) => i.id === id);
+  if (integrationIndex === -1) {
+    throw new Error(`Integration with ID ${id} not found`);
+  }
+  integrationsData.splice(integrationIndex, 1);
+};
 
 export const integrationService = {
-  getAllIntegrations: async (): Promise<ProcessFormIntegration[]> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const integrations = JSON.parse(localStorage.getItem("processFormIntegration") || "[]");
-        resolve(integrations);
-      }, 300);
-    });
-  },
-  
-  getIntegrationById: async (id: string): Promise<ProcessFormIntegration | null> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const integrations = JSON.parse(localStorage.getItem("processFormIntegration") || "[]");
-        const integration = integrations.find((i: ProcessFormIntegration) => i.id === id);
-        resolve(integration || null);
-      }, 300);
-    });
-  },
-  
-  getIntegrationByProcessId: async (processId: string): Promise<ProcessFormIntegration | null> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const integrations = JSON.parse(localStorage.getItem("processFormIntegration") || "[]");
-        const integration = integrations.find((i: ProcessFormIntegration) => i.processId === processId);
-        resolve(integration || null);
-      }, 300);
-    });
-  },
-  
-  createIntegration: async (integration: Omit<ProcessFormIntegration, "id" | "createdAt">): Promise<ProcessFormIntegration> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const integrations = JSON.parse(localStorage.getItem("processFormIntegration") || "[]");
-        const newIntegration: ProcessFormIntegration = {
-          ...integration,
-          id: crypto.randomUUID(),
-          createdAt: new Date().toISOString(),
-        };
-        
-        integrations.push(newIntegration);
-        localStorage.setItem("processFormIntegration", JSON.stringify(integrations));
-        resolve(newIntegration);
-      }, 500);
-    });
-  },
-  
-  updateIntegration: async (id: string, integration: Omit<ProcessFormIntegration, "id" | "createdAt">): Promise<ProcessFormIntegration> => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const integrations = JSON.parse(localStorage.getItem("processFormIntegration") || "[]");
-        const index = integrations.findIndex((i: ProcessFormIntegration) => i.id === id);
-        
-        if (index === -1) {
-          reject(new Error("Integration not found"));
-          return;
-        }
-        
-        const updatedIntegration = {
-          ...integrations[index],
-          ...integration,
-        };
-        
-        integrations[index] = updatedIntegration;
-        localStorage.setItem("processFormIntegration", JSON.stringify(integrations));
-        resolve(updatedIntegration);
-      }, 500);
-    });
-  },
-  
-  deleteIntegration: async (id: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const integrations = JSON.parse(localStorage.getItem("processFormIntegration") || "[]");
-        const index = integrations.findIndex((i: ProcessFormIntegration) => i.id === id);
-        
-        if (index === -1) {
-          reject(new Error("Integration not found"));
-          return;
-        }
-        
-        integrations.splice(index, 1);
-        localStorage.setItem("processFormIntegration", JSON.stringify(integrations));
-        resolve();
-      }, 500);
-    });
-  },
+  getAllIntegrations,
+  getIntegrationById,
+  getIntegrationByProcessId,
+  getIntegrationsByProcessTask,
+  createIntegration,
+  updateIntegration,
+  deleteIntegration,
 };

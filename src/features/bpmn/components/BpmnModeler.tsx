@@ -67,17 +67,6 @@ export const BpmnModeler: React.FC<BpmnModelerProps> = ({
       },
     });
 
-    // Make editor read-only if specified
-    if (readOnly) {
-      modeler.get("editorActions").register({
-        toggleMode: () => {
-          modeler.get("canvas").setDefaultLayer("readonly");
-          modeler.get("contextPad").close();
-          modeler.get("palette").close();
-        },
-      });
-    }
-
     bpmnModelerRef.current = modeler;
 
     // Reset error state on new initialization
@@ -89,7 +78,7 @@ export const BpmnModeler: React.FC<BpmnModelerProps> = ({
         bpmnModelerRef.current = null;
       }
     };
-  }, []);
+  }, [readOnly]);
 
   // Separate effect for handling XML import
   useEffect(() => {
@@ -103,9 +92,17 @@ export const BpmnModeler: React.FC<BpmnModelerProps> = ({
       .then(() => {
         setError(null);
         if (readOnly) {
-          modeler.get("editorActions").trigger("toggleMode");
+          try {
+            modeler.get("editorActions").trigger("toggleMode");
+          } catch (err) {
+            console.error("Error triggering read-only mode:", err);
+          }
         }
-        modeler.get("canvas").zoom("fit-viewport");
+        try {
+          modeler.get("canvas").zoom("fit-viewport");
+        } catch (err) {
+          console.error("Error zooming to fit viewport:", err);
+        }
 
         // If it's a new diagram and onChange exists, notify parent of default XML
         if (!initialXml && onChange) {
@@ -120,9 +117,17 @@ export const BpmnModeler: React.FC<BpmnModelerProps> = ({
         modeler.importXML(DEFAULT_DIAGRAM_XML)
           .then(() => {
             if (readOnly) {
-              modeler.get("editorActions").trigger("toggleMode");
+              try {
+                modeler.get("editorActions").trigger("toggleMode");
+              } catch (err) {
+                console.error("Error triggering read-only mode:", err);
+              }
             }
-            modeler.get("canvas").zoom("fit-viewport");
+            try {
+              modeler.get("canvas").zoom("fit-viewport");
+            } catch (err) {
+              console.error("Error zooming to fit viewport:", err);
+            }
 
             // Notify parent of the default XML being used
             if (onChange) {
@@ -133,30 +138,55 @@ export const BpmnModeler: React.FC<BpmnModelerProps> = ({
             setError("Erro crítico ao carregar o diagrama. Por favor, atualize a página.");
           });
       });
-  }, [initialXml, readOnly]);
+  }, [initialXml, readOnly, onChange]);
 
   // Setup event listeners for XML changes
   useEffect(() => {
     if (!bpmnModelerRef.current || !onChange) return;
 
     const modeler = bpmnModelerRef.current;
-    const eventBus = modeler.get("eventBus");
+    let eventBus;
+
+    try {
+      eventBus = modeler.get("eventBus");
+    } catch (err) {
+      console.error("Error getting eventBus:", err);
+      return;
+    }
+
+    if (!eventBus) return;
 
     // Listen for change events in the diagram
     const onChanged = () => {
-      modeler.saveXML({ format: true })
-        .then(({ xml }: { xml: string }) => {
-          onChange(xml);
-        })
-        .catch((err: Error) => {
-          console.error("Erro ao salvar BPMN XML", err);
-        });
+      try {
+        modeler.saveXML({ format: true })
+          .then(({ xml }: { xml: string }) => {
+            if (xml && onChange) {
+              onChange(xml);
+            }
+          })
+          .catch((err: Error) => {
+            console.error("Erro ao salvar BPMN XML", err);
+          });
+      } catch (err) {
+        console.error("Error in change event handler:", err);
+      }
     };
 
-    eventBus.on("commandStack.changed", onChanged);
+    try {
+      eventBus.on("commandStack.changed", onChanged);
+    } catch (err) {
+      console.error("Error registering event listener:", err);
+    }
 
     return () => {
-      eventBus.off("commandStack.changed", onChanged);
+      try {
+        if (eventBus) {
+          eventBus.off("commandStack.changed", onChanged);
+        }
+      } catch (err) {
+        console.error("Error removing event listener:", err);
+      }
     };
   }, [onChange]);
 

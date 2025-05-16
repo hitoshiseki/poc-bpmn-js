@@ -10,11 +10,10 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
-import { Save, ArrowLeft } from "lucide-react";
+import { Save, ArrowLeft, Edit2, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -27,7 +26,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { BpmnProcess } from "@/lib/types";
+import { BpmnProcess, ProcessTask } from "@/lib/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const processFormSchema = z.object({
@@ -37,14 +36,20 @@ const processFormSchema = z.object({
 
 type ProcessFormValues = z.infer<typeof processFormSchema>;
 
-const ProcessEditor = () => {
+interface ProcessEditorProps {
+  mode?: "edit" | "view";
+}
+
+const ProcessEditor = ({ mode = "edit" }: ProcessEditorProps) => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
-  const isEditMode = Boolean(id);
+  const isEditMode = mode === "edit";
+  const isViewMode = mode === "view";
   const isMobile = useIsMobile();
 
   const [bpmnXml, setBpmnXml] = useState<string>("");
+  const [tasks, setTasks] = useState<ProcessTask[]>([]);
 
   const form = useForm<ProcessFormValues>({
     resolver: zodResolver(processFormSchema),
@@ -54,11 +59,11 @@ const ProcessEditor = () => {
     },
   });
 
-  // Fetch process data if in edit mode
-  const { data: process, isLoading } = useQuery({
+  // Fetch process data
+  const { data: process, isLoading: isProcessLoading } = useQuery({
     queryKey: ["process", id],
     queryFn: () => processService.getProcessById(id!),
-    enabled: isEditMode,
+    enabled: Boolean(id),
   });
 
   // Set form values when process data is loaded
@@ -68,9 +73,20 @@ const ProcessEditor = () => {
         name: process.name,
         description: process.description,
       });
-      setBpmnXml(process.xml);
+
+      // Set the BPMN XML with a slight delay to ensure component is ready
+      setTimeout(() => {
+        setBpmnXml(process.xml || "");
+      }, 100);
     }
   }, [process, form]);
+
+  // Add an effect to log when bpmnXml changes to help with debugging
+  useEffect(() => {
+    if (bpmnXml) {
+      // XML is available and ready for rendering
+    }
+  }, [bpmnXml]);
 
   // Create process mutation
   const createProcessMutation = useMutation({
@@ -118,50 +134,99 @@ const ProcessEditor = () => {
       xml: bpmnXml,
     };
 
-    if (isEditMode && id) {
+    if (id) {
       updateProcessMutation.mutate({ id, data });
     } else {
       createProcessMutation.mutate(data as Omit<BpmnProcess, "id" | "createdAt" | "updatedAt">);
     }
   };
 
+  if (isProcessLoading && id) {
+    return (
+      <div className="flex h-[calc(100vh-120px)] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  if (id && !process) {
+    return (
+      <div className="flex h-[calc(100vh-120px)] items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold">Processo não encontrado</h2>
+          <p className="text-muted-foreground">O processo solicitado não existe</p>
+          <Button onClick={() => navigate("/processes")} className="mt-4">
+            Voltar para processos
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 py-6">
-      <div className="flex items-center">
-        <Button variant="outline" size="icon" onClick={() => navigate("/processes")}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h2 className="ml-4 text-3xl font-bold">
-          {isEditMode ? "Editar Processo" : "Novo Processo"}
-        </h2>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center">
+          <Button variant="outline" size="icon" onClick={() => navigate("/processes")}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h2 className="ml-4 text-3xl font-bold">
+            {isViewMode ? process?.name : (id ? "Editar Processo" : "Novo Processo")}
+          </h2>
+        </div>
+        {isViewMode && id && (
+          <div className="mt-4 flex space-x-2 md:mt-0">
+            <Button asChild variant="outline">
+              <span onClick={() => navigate(`/processes/${id}/edit`)}>
+                <Edit2 className="mr-2 h-4 w-4" />
+                Editar Processo
+              </span>
+            </Button>
+            <Button asChild>
+              <span onClick={() => navigate(`/integration/new?processId=${id}`)}>
+                <LinkIcon className="mr-2 h-4 w-4" />
+                Nova Integração
+              </span>
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-6">
-        <Card className={`h-[calc(100vh-250px)] ${isMobile || !isMobile && window.innerWidth < 1280 ? 'w-full' : ''}`}>
+        {/* Diagrama BPMN */}
+        <Card className={`${isViewMode ? 'h-[calc(100)]' : 'h-[calc(100vh)]'} ${isMobile || !isMobile && window.innerWidth < 1280 ? 'w-full' : ''}`}>
           <CardHeader>
             <CardTitle>Diagrama do Processo</CardTitle>
             <CardDescription>
-              Desenhe seu diagrama BPMN usando o modelador abaixo
+              {isViewMode
+                ? "Visualização do diagrama BPMN (somente leitura)"
+                : "Desenhe seu diagrama BPMN usando o modelador abaixo"}
             </CardDescription>
           </CardHeader>
           <CardContent className="h-[calc(100%-130px)]">
-            {(isLoading && isEditMode) ? (
+            {(isProcessLoading && id) ? (
               <div className="flex h-full w-full items-center justify-center">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
               </div>
             ) : (
               <BpmnModeler
                 initialXml={bpmnXml}
-                onChange={onBpmnChange}
+                onChange={isEditMode ? onBpmnChange : undefined}
+                readOnly={isViewMode}
+                key={bpmnXml ? "loaded" : "empty"} // Force re-render when XML changes
               />
             )}
           </CardContent>
         </Card>
+
+        {/* Formulário - usado em ambos os modos, apenas desabilitado no modo visualização */}
         <Card className={`${isMobile || !isMobile && window.innerWidth < 1280 ? 'w-full' : ''}`}>
           <CardHeader>
             <CardTitle>Detalhes do Processo</CardTitle>
             <CardDescription>
-              Insira as informações básicas sobre seu processo BPMN
+              {isViewMode
+                ? "Informações básicas do processo"
+                : "Insira as informações básicas sobre seu processo BPMN"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -174,7 +239,11 @@ const ProcessEditor = () => {
                     <FormItem>
                       <FormLabel>Nome</FormLabel>
                       <FormControl>
-                        <Input placeholder="Digite o nome do processo" {...field} />
+                        <Input
+                          placeholder="Digite o nome do processo"
+                          disabled={isViewMode}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -191,6 +260,7 @@ const ProcessEditor = () => {
                         <Textarea
                           placeholder="Digite a descrição do processo"
                           rows={4}
+                          disabled={isViewMode}
                           {...field}
                         />
                       </FormControl>
@@ -199,14 +269,28 @@ const ProcessEditor = () => {
                   )}
                 />
 
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isLoading || createProcessMutation.isPending || updateProcessMutation.isPending}
-                >
-                  <Save className="mr-2 h-4 w-4" />
-                  {isEditMode ? "Atualizar Processo" : "Salvar Processo"}
-                </Button>
+                {isEditMode && (
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={isProcessLoading || createProcessMutation.isPending || updateProcessMutation.isPending}
+                  >
+                    <Save className="mr-2 h-4 w-4" />
+                    {id ? "Atualizar Processo" : "Salvar Processo"}
+                  </Button>
+                )}
+
+                {isViewMode && id && (
+                  <Button
+                    type="button"
+                    className="w-full"
+                    variant="outline"
+                    onClick={() => navigate(`/processes/${id}/edit`)}
+                  >
+                    <Edit2 className="mr-2 h-4 w-4" />
+                    Editar Processo
+                  </Button>
+                )}
               </form>
             </Form>
           </CardContent>
